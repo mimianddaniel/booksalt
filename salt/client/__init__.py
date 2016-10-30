@@ -1261,14 +1261,15 @@ class LocalClient(object):
                 if min_ret.get('failed') is True:
                     if connected_minions is None:
                         connected_minions = salt.utils.minions.CkMinions(self.opts).connected_ids()
-                    if connected_minions and id_ not in connected_minions:
-                        yield {id_: {'out': 'no_return',
-                                     'ret': 'Minion did not return. [Not connected]'}}
-                    else:
-                        # don't report syndics as unresponsive minions
-                        if not os.path.exists(os.path.join(self.opts['syndic_dir'], id_)):
-                            yield {id_: {'out': 'no_return',
-                                         'ret': 'Minion did not return. [No response]'}}
+		    if verbose:
+			if connected_minions and id_ not in connected_minions:
+			    yield {id_: {'out': 'no_return',
+					 'ret': 'Minion did not return. [Not connected]'}}
+			else:
+			    # don't report syndics as unresponsive minions
+			    if not os.path.exists(os.path.join(self.opts['syndic_dir'], id_)):
+				yield {id_: {'out': 'no_return',
+					     'ret': 'Minion did not return. [No response]'}}
                 else:
                     yield {id_: min_ret}
 

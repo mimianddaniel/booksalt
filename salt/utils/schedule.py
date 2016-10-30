@@ -562,17 +562,18 @@ class Schedule(object):
                             )
                         )
 
-            if 'return_job' in data and not data['return_job']:
-                pass
-            else:
+            if '__role' in self.opts and self.opts['__role'] == 'minion':
+                if ('return_job' in data and not data['return_job']) or ('function' in data and data['function'] == 'status.master'):
+                    pass
+                else:
                 # Send back to master so the job is included in the job list
-                mret = ret.copy()
-                mret['jid'] = 'req'
-                channel = salt.transport.Channel.factory(self.opts, usage='salt_schedule')
-                load = {'cmd': '_return', 'id': self.opts['id']}
-                for key, value in mret.items():
-                    load[key] = value
-                channel.send(load)
+                    mret = ret.copy()
+                    mret['jid'] = 'req'
+                    channel = salt.transport.Channel.factory(self.opts, usage='salt_schedule')
+                    load = {'cmd': '_return', 'id': self.opts['id']}
+                    for key, value in mret.items():
+                        load[key] = value
+                    channel.send(load)
 
         except Exception:
             log.exception("Unhandled exception running {0}".format(ret['fun']))

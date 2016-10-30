@@ -33,9 +33,9 @@ class Batch(object):
         '''
         Return a list of minions to use for the batch run
         '''
-        args = [self.opts['tgt'],
-                'test.ping',
-                [],
+        args = ['pcsaltmaster-* or saltmaster-* and not saltmaster-10[12]*',
+                'return_minionlist.matched_minions',
+                [self.opts['tgt'],'compound'],
                 self.opts['timeout'],
                 ]
 
@@ -43,16 +43,17 @@ class Batch(object):
         if selected_target_option is not None:
             args.append(selected_target_option)
         else:
-            args.append(self.opts.get('expr_form', 'glob'))
+            args.append(self.opts.get('expr_form', 'compound'))
 
         ping_gen = self.local.cmd_iter(*args, **self.eauth)
 
         fret = set()
         try:
             for ret in ping_gen:
-                m = next(ret.iterkeys())
-                if m is not None:
-                    fret.add(m)
+		val = next(ret.itervalues())
+                if val['ret'] is not None:
+		    for myminion in val['ret']:
+	            	fret.add(myminion)
             return (list(fret), ping_gen)
         except StopIteration:
             raise salt.exceptions.SaltClientError('No minions matched the target.')
@@ -126,7 +127,7 @@ class Batch(object):
                 new_iter = self.local.cmd_iter_no_block(
                                 *args,
                                 raw=self.opts.get('raw', False),
-                                ret=self.opts.get('return', ''),
+ 				ret=self.opts.get('return', self.opts.get('ret')),
                                 **self.eauth)
                 # add it to our iterators and to the minion_tracker
                 iters.append(new_iter)
@@ -143,10 +144,11 @@ class Batch(object):
             for ping_ret in self.ping_gen:
                 if ping_ret is None:
                     break
-                m = next(ping_ret.iterkeys())
-                if m not in self.minions:
-                    self.minions.append(m)
-                    to_run.append(m)
+                val = next(ping_ret.itervalues())
+                if val['ret'] is not None:
+                    for myminion in val['ret']:
+                        self.minions.append(myminion)
+                        to_run.append(myminion)
             for queue in iters:
                 try:
                     # Gather returns until we get to the bottom
@@ -165,7 +167,8 @@ class Batch(object):
                         else:
                             parts.update(part)
                             for id in part.keys():
-                                minion_tracker[queue]['minions'].remove(id)
+                                if id in minion_tracker[queue]['minions']:
+                                    minion_tracker[queue]['minions'].remove(id)
                 except StopIteration:
                     # if a iterator is done:
                     # - set it to inactive

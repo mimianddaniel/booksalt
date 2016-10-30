@@ -369,7 +369,7 @@ class CkMinions(object):
                     matcher_args = ['@'.join(comps[1:])]
                     if comps[0] in ('G', 'P', 'I', 'J'):
                         matcher_args.append(delimiter)
-                    matcher_args.append(True)
+                    matcher_args.append(greedy)
 
                     if not matcher:
                         # If an unknown matcher is called at any time, fail out
@@ -392,7 +392,7 @@ class CkMinions(object):
                             else:
                                 results.append('&')
                             results.append('(')
-                            results.append(str(set(minions)))
+                            results.append(str(set(self._check_glob_minions(word, greedy))))
                             results.append('-')
                             unmatched.append('-')
                         elif match == 'and':
@@ -428,12 +428,12 @@ class CkMinions(object):
                     # The match is not explicitly defined, evaluate as a glob
                     if unmatched and unmatched[-1] == '-':
                         results.append(
-                                str(set(self._check_glob_minions(match, True))))
+                                str(set(self._check_glob_minions(match, greedy))))
                         results.append(')')
                         unmatched.pop()
                     else:
                         results.append(
-                                str(set(self._check_glob_minions(match, True))))
+                                str(set(self._check_glob_minions(match, greedy))))
             for token in unmatched:
                 results.append(')')
             results = ' '.join(results)

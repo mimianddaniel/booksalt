@@ -62,6 +62,7 @@ import binascii
 from salt.utils.master import ConnectedCache
 from salt.utils.cache import CacheCli
 from salt.ext.six.moves import range
+import salt.ext.six as six
 
 # Import halite libs
 try:
@@ -1300,7 +1301,7 @@ class AESFuncs(object):
                 f.write('')
 
         # Format individual return loads
-        for key, item in load['return'].items():
+        for key, item in six.iteritems(load['return']):
             ret = {'jid': load['jid'],
                    'id': key,
                    'return': item}

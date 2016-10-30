@@ -117,13 +117,14 @@ def _publish(
                 end_loop = True
 
             if end_loop:
+                cret = {}
+                cret['jid'] = peer_data['jid']
                 if form == 'clean':
-                    cret = {}
                     for host in ret:
                         cret[host] = ret[host]['ret']
                     return cret
                 else:
-                    return ret
+                    return cret
             loop_counter = loop_counter + 1
             time.sleep(loop_interval)
     else:
@@ -132,17 +133,18 @@ def _publish(
                 'id': __opts__['id'],
                 'tok': tok,
                 'jid': peer_data['jid']}
+        cret = {}
+        cret['jid'] = peer_data['jid']
         ret = channel.send(load)
         if form == 'clean':
-            cret = {}
             for host in ret:
                 cret[host] = ret[host]['ret']
             return cret
         else:
-            return ret
+            return cret
 
 
-def publish(tgt, fun, arg=None, expr_form='glob', returner='', timeout=5):
+def publish(tgt, fun, arg=None, expr_form='glob', returner='', timeout=5, wait=True):
     '''
     Publish a command from the minion out to other minions.
 
@@ -203,6 +205,7 @@ def publish(tgt, fun, arg=None, expr_form='glob', returner='', timeout=5):
 
 
     '''
+
     return _publish(tgt,
                     fun,
                     arg=arg,
@@ -210,10 +213,10 @@ def publish(tgt, fun, arg=None, expr_form='glob', returner='', timeout=5):
                     returner=returner,
                     timeout=timeout,
                     form='clean',
-                    wait=True)
+                    wait=wait)
 
 
-def full_data(tgt, fun, arg=None, expr_form='glob', returner='', timeout=5):
+def full_data(tgt, fun, arg=None, expr_form='glob', returner='', timeout=5, wait=True):
     '''
     Return the full data about the publication, this is invoked in the same
     way as the publish function
@@ -242,7 +245,7 @@ def full_data(tgt, fun, arg=None, expr_form='glob', returner='', timeout=5):
                     returner=returner,
                     timeout=timeout,
                     form='full',
-                    wait=True)
+                    wait=wait)
 
 
 def runner(fun, arg=None, timeout=5):

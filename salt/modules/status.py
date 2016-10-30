@@ -16,6 +16,7 @@ from salt.ext.six.moves import range
 # Import salt libs
 import salt.utils
 from salt.utils.network import remote_port_tcp as _remote_port_tcp
+from salt.utils.network import ss_return_IP as _ss_remote_port_tcp
 from salt.utils.network import host_to_ip as _host_to_ip
 import salt.utils.event
 import salt.config
@@ -795,7 +796,7 @@ def master(master=None, connected=True):
         if tmp_ip is not None:
             master_ip = tmp_ip
 
-    ips = _remote_port_tcp(port)
+    ips = _ss_remote_port_tcp(port)
 
     if connected:
         if master_ip not in ips:

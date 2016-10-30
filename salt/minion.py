@@ -22,6 +22,7 @@ import traceback
 import types
 from random import randint, shuffle
 from salt.ext.six.moves import range  # pylint: disable=import-error,redefined-builtin
+from salt.modules import grains
 
 from stat import S_IMODE
 
@@ -723,6 +724,7 @@ class Minion(MinionBase):
 
         # add master_alive job if enabled
         if self.opts['master_alive_interval'] > 0:
+            self.functions['grains.setval']("failover", False)
             self.schedule.add_job({
                 '__master_alive':
                 {
@@ -1246,6 +1248,7 @@ class Minion(MinionBase):
         ret['jid'] = data['jid']
         ret['fun'] = data['fun']
         ret['fun_args'] = data['arg']
+        ret['user'] = data['user']
         if 'master_id' in data:
             ret['master_id'] = data['master_id']
         if 'metadata' in data:
@@ -1258,6 +1261,7 @@ class Minion(MinionBase):
             if 'ret_config' in data:
                 ret['ret_config'] = data['ret_config']
             ret['id'] = opts['id']
+
             for returner in set(data['ret'].split(',')):
                 try:
                     minion_instance.returners['{0}.returner'.format(
@@ -1308,6 +1312,7 @@ class Minion(MinionBase):
             ret['jid'] = data['jid']
             ret['fun'] = data['fun']
             ret['fun_args'] = data['arg']
+            ret['user'] = data['user']
         if 'metadata' in data:
             ret['metadata'] = data['metadata']
         minion_instance._return_pub(ret)
@@ -1764,6 +1769,10 @@ class Minion(MinionBase):
                         self._fire_master_minion_start()
                         log.info('Minion is ready to receive requests!')
 
+                        # update grains to include the failover state
+                        log.info('Failover occurred for Minion {0}'.format(self.opts['id']))
+                        self.functions['grains.setval']("failover", True)
+
                         # update scheduled job to run with the new master addr
                         schedule = {
                            'function': 'status.master',
@@ -1781,6 +1790,7 @@ class Minion(MinionBase):
             if not self.connected:
                 log.info('Connection to master {0} re-established'.format(self.opts['master']))
                 self.connected = True
+
                 # modify the __master_alive job to only fire,
                 # if the connection is lost again
                 schedule = {

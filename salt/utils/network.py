@@ -955,6 +955,28 @@ def local_port_tcp(port):
     return ret
 
 
+def ss_return_IP(port):
+    '''
+    Return a set of IP addres that are currently connected on a given port using ss command
+    ss command uses netlink to get the info whereas using proc will be sync job and result in hogging of cpu if the list is long
+    '''
+    remotes = set()
+    try:
+        data = subprocess.check_output(['ss', 'state', 'ESTABLISHED', '( dport = :' + str(port) + ' )'])  # pylint: disable=minimum-python-version
+    except subprocess.CalledProcessError:
+        log.error('Failed ss command')
+        raise
+
+    lines = data.split('\n')
+    for line in lines:
+        if line:
+            chunks = line.split()
+            if str(port) in chunks[-1].split(':'):
+                remote_host, remote_port = chunks[-1].split(':')
+                remotes.add(remote_host)
+    return remotes
+
+
 def remote_port_tcp(port):
     '''
     Return a set of ip addrs the current host is connected to on given port
