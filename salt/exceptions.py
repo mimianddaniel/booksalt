@@ -25,6 +25,12 @@ class SaltException(Exception):
         return dict(message=self.__unicode__(), args=self.args)
 
 
+class SaltCacheError(SaltException):
+    '''
+    Thrown when a problem was encountered trying to read or write from the salt cache
+    '''
+
+
 class SaltClientError(SaltException):
     '''
     Problem reading the master root key
@@ -256,3 +262,19 @@ class SaltCloudPasswordError(SaltCloudException):
     '''
     Raise when virtual terminal password input failed
     '''
+
+class FileLockError(SaltException):
+    '''
+    Used when an error occurs obtaining a file lock
+    '''
+    def __init__(self, msg, time_start=None, *args, **kwargs):
+        super(FileLockError, self).__init__(msg, *args, **kwargs)
+        if time_start is None:
+            log.warning(
+                'time_start should be provided when raising a FileLockError. '
+                'Defaulting to current time as a fallback, but this may '
+                'result in an inaccurate timeout.'
+            )
+            self.time_start = time.time()
+        else:
+            self.time_start = time_start
